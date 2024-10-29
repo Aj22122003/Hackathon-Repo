@@ -1,0 +1,793 @@
+contact:
+import { Input, Button, Card, Spacer, Textarea } from '@nextui-org/react';
+
+const Contact = () => {
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-[#232323] p-4">
+            <Card className="max-w-full w-1/3 p-6 bg-background text-text">
+                <h2 className="text-2xl font-semibold text-primary text-center mb-4">Contact Us</h2>
+
+                <form className="space-y-6">
+                    {/* Name Input */}
+                    <Input 
+                        label="Name" 
+                        placeholder="Enter your name"
+                        required
+                        className="w-full text-text"
+                        aria-label="Name"
+                    />
+
+                    {/* Email Input */}
+                    <Input 
+                        label="Email" 
+                        type="email" 
+                        placeholder="Enter your email"
+                        required
+                        className="w-full text-text"
+                        aria-label="Email"
+                    />
+
+                    {/* Message Input */}
+                    <Textarea 
+                        label="Message" 
+                        placeholder="Enter your message"
+                        required
+                        className="w-full text-text"
+                        aria-label="Message"
+                        minRows={4}
+                    />
+
+                    <Spacer y={1} />
+
+                    {/* Submit Button */}
+                    <Button 
+                        className="w-full bg-primary text-background hover:bg-secondary" 
+                        type="submit"
+                        aria-label="Submit"
+                    >
+                        Send Message
+                    </Button>
+                </form>
+            </Card>
+        </div>
+    );
+};
+
+export default Contact;
+
+Events:
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import EventCard from '../component/EventCard';
+import { Card } from '@nextui-org/react';
+function DataDisplay() {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    // Fetch data from the Node.js backend
+    axios
+      .get('http://localhost:5000/getevents')
+      .then((response) => {
+        console.log(response.data);
+        setData(response.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+      });
+  }, []);
+
+  return (
+    <div className="p-10 h-full bg-[#232323] text-text flex flex-col gap-4">
+      <h1 className="text-text text-2xl ">Upcoming events</h1>
+      <div className="grid grid-cols-3 grid-rows-auto h-full w-full gap-10">
+        {data.map((event) => (
+          <EventCard
+            key={event._id}
+            id={event._id}
+            name={event.eventName}
+            date={new Date(event.eventDate).toLocaleDateString()}
+            price={event.price}
+            loc={event.venue}
+            maxAttendes={event.capacity}
+          ></EventCard>
+        ))}
+        {/* <h1>All Events</h1>
+      <table border="1" cellPadding="10" cellSpacing="0">
+        <thead>
+          <tr>
+            <th>Event Name</th>
+            <th>Event Date</th>
+            <th>Event Location</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((item) => (
+            <tr key={item._id}>
+              <td>
+                <a href={`event/${item._id}`}>{item.eventName}</a>
+              </td>
+              <td>{item.eventDate}</td>
+              <td>{item.eventvenue}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table> */}
+      </div>
+    </div>
+  );
+}
+
+export default DataDisplay;
+
+Home:
+import { today, getLocalTimeZone } from '@internationalized/date';
+import { Calendar } from '@nextui-org/react';
+import EventsTable from '../component/EventsTable';
+import TransactionTable from '../component/TransactionTable';
+import WalletAmountCard from '../component/WalletAmountCard';
+const Home = () => {
+  return (
+    <div className="bg-[#232323] flex flex-col lg:grid gap-6 lg:grid-cols-3 lg:grid-rows-2 lg:px-12 py-12 h-fit w-screen lg:w-fit">
+      <Calendar
+        className="text-text flex flex-col items-center justify-center gap-2 bg-background w-full p-3 rounded-xl "
+        topContent="Overview"
+        defaultValue={today(getLocalTimeZone())}
+        minValue={today(getLocalTimeZone())}
+      />
+      <WalletAmountCard></WalletAmountCard>
+      <EventsTable></EventsTable>
+      <div className="text-text col-span-3">
+        <TransactionTable></TransactionTable>
+      </div>
+    </div>
+  );
+};
+
+export default Home;
+
+Host:
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Input, Button, Textarea, Card } from '@nextui-org/react';
+
+const Host = () => {
+  const [eventName, setEventName] = useState('');
+  const [eventDescription, setEventDescription] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventTime, setEventTime] = useState('');
+  const [venue, setVenue] = useState('');
+  const [capacity, setCapacity] = useState('');
+  const [price, setPrice] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const newEvent = {
+      eventName,
+      eventDescription,
+      eventDate,
+      eventTime,
+      venue,
+      capacity: parseInt(capacity),
+      price: parseFloat(price),
+    };
+
+    try {
+      setIsLoading(true);
+      await axios.post('http://localhost:5000/host', newEvent);
+      setIsLoading(false);
+
+      // Clear form fields after submission
+      navigate('/events');
+      setEventName('');
+      setEventDescription('');
+      setEventDate('');
+      setEventTime('');
+      setVenue('');
+      setCapacity('');
+      setPrice('');
+    } catch (error) {
+      console.error('Error creating event:', error);
+      alert('Failed to create event. Please try again.');
+    }
+  };
+
+  return (
+    <div className="h-full bg-[#232323] text-text flex flex-col justify-center items-center">
+      <Card className="bg-background p-10 flex flex-col gap-3 items-center  ">
+        <h2 className="text-2xl font-extrabold text-primary">
+          Create New Event
+        </h2>
+        <form
+          onSubmit={handleSubmit}
+          className="w-full grid grid-cols-2 grid-rows-auto gap-6 "
+        >
+          <div className="col-span-2">
+            <label>Event Name:</label>
+            <Input
+              type="text"
+              value={eventName}
+              onChange={(e) => setEventName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="flex flex-col col-span-2">
+            <label>Event Description:</label>
+            <Textarea
+              value={eventDescription}
+              onChange={(e) => setEventDescription(e.target.value)}
+              required
+            ></Textarea>
+          </div>
+          <div>
+            <label>Event Date:</label>
+            <Input
+              type="date"
+              value={eventDate}
+              onChange={(e) => setEventDate(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label>Event Time:</label>
+            <Input
+              type="time"
+              value={eventTime}
+              onChange={(e) => setEventTime(e.target.value)}
+              required
+            />
+          </div>
+          <div className="col-span-2">
+            <label>Venue:</label>
+            <Input
+              type="text"
+              value={venue}
+              onChange={(e) => setVenue(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label>Capacity:</label>
+            <Input
+              type="number"
+              min={0}
+              value={capacity}
+              onChange={(e) => setCapacity(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label>Price:</label>
+            <Input
+              type="number"
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              required
+            />
+          </div>
+          <Button
+            className="col-span-2"
+            variant="ghost"
+            type="submit"
+            color="primary"
+            isLoading={isLoading}
+          >
+            Create Event
+          </Button>
+        </form>
+      </Card>
+    </div>
+  );
+};
+
+export default Host;
+Landing:
+import { Link } from 'react-router-dom';
+const Landing = () => {
+  return (
+    <>
+      <section className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-800 to-gray-900 w-full">
+        <div className="space-y-6 text-center">
+          <h2 className="text-7xl font-medium text-secondary">
+            Event{' '}
+            <span className="text-text bg-secondary px-1 rounded-lg">Hub</span>
+          </h2>
+          <p className="text-3xl text-default-400">Attend. Collect. Unlock.</p>
+          <div className="flex justify-center space-x-4 mt-6">
+            <Link to="/login">
+              <button className="px-6 py-3 bg-background text-white font-semibold rounded-md hover:bg-gray-700 transition duration-300">
+                Sign In
+              </button>
+            </Link>
+            <Link to="/register">
+              <button className="px-6 py-3 bg-background text-white font-semibold rounded-md hover:bg-gray-700 transition duration-300 ">
+                Sign Up
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+};
+
+export default Landing;
+
+Login:
+import React, { useState } from 'react';
+import axios from 'axios';
+import { Input, Button } from '@nextui-org/react';
+const Login = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const handleLogin = async (e) => {
+    e.preventDefault(); // Prevent form submission from refreshing the page
+
+    try {
+      const response = await axios.post(
+        'http://localhost:5000/login',
+        {
+          username,
+          password,
+        },
+        { withCredentials: true }
+      ); // Send cookies with the request
+
+      // If the login is successful, you will get a status of 200
+      if (response.status === 200) {
+        setSuccess('Login successful');
+        setError('');
+        localStorage.setItem('username', username);
+        window.location.href = '/home';
+        // You might want to redirect the user or update your app state after successful login
+      }
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        setError('Invalid username or password');
+      } else {
+        setError('An error occurred while logging in');
+      }
+      setSuccess('');
+    }
+  };
+
+  return (
+    <div className="login-container flex flex-col gap-2 bg-background text-text px-14 py-16  rounded-lg h-fit">
+      <h2 className="text-center text-xl">Login</h2>
+      <form onSubmit={handleLogin} className="flex flex-col gap-5 text-lg">
+        <div>
+          <label htmlFor="username">Username:</label>
+          <Input
+            type="text"
+            size="lg"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="password">Password:</label>
+          <Input
+            size="lg"
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <Button variant="ghost" type="submit" color="primary">
+          Login
+        </Button>
+      </form>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {success && <p style={{ color: 'green' }}>{success}</p>}
+      <p className="text-xs text-center">
+        New user? <a href="/register">Register here</a>
+      </p>
+    </div>
+  );
+};
+
+export default Login;
+Redirect:
+import React from 'react';
+import Login from './Login';
+
+const RedirectPage = () => {
+    return (
+        <div style={{ textAlign: 'center', marginTop: '50px' }}>
+            <h1>Please log in first</h1>
+            <Login />
+        </div>
+    );
+};
+
+export default RedirectPage;
+Register:
+import React, { useState } from 'react';
+import axios from 'axios';
+import { Input, Button } from '@nextui-org/react';
+const Register = () => {
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      setError("Passwords don't match");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        'http://localhost:5000/register',
+        {
+          name,
+          username,
+          email,
+          password,
+          phone,
+        },
+        { withCredentials: true }
+      );
+
+      // Redirect to admin or handle success
+      if (response.status === 200) {
+        window.location.href = '/login'; // Redirect to the login page on success
+      }
+    } catch (err) {
+      // Handle error response
+      if (err.response && err.response.status === 400) {
+        setError('User already exists');
+        console.log(err);
+      } else {
+        setError('An error occurred. Please try again later.');
+      }
+    }
+  };
+
+  return (
+    <div className="login-container flex flex-col gap-2 bg-background text-text px-14 py-16  rounded-lg h-fit">
+      <h1 className="text-center text-3xl">Register</h1>
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col justify-between gap-6 lg:grid lg:grid-cols-2 lg:grid-row-auto"
+      >
+        <div>
+          <label htmlFor="name">Name:</label>
+          <Input
+            type="text"
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="username">Username:</label>
+          <Input
+            type="text"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="email">Email:</label>
+          <Input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="phone">Phone:</label>
+          <Input
+            type="tel"
+            id="phone"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="password">Password:</label>
+          <Input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="confirm-password">Confirm Password:</label>
+          <Input
+            type="password"
+            id="confirm-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        <Button
+          className="col-span-2"
+          variant="ghost"
+          color="primary"
+          type="submit"
+        >
+          Register
+        </Button>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+      </form>
+    </div>
+  );
+};
+
+export default Register;
+
+Unievent:
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useParams } from 'react-router-dom';
+import { ethers } from 'ethers';
+import { events_abi } from '../helpers/abi';
+import { Card, Button } from '@nextui-org/react';
+
+const EventDetails = () => {
+  const { id } = useParams();
+  const [eventData, setEventData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [provider, setProvider] = useState(null);
+  const [signer, setSigner] = useState(null);
+  const [connected, setConnected] = useState(false);
+
+  const connectWallet = async (event) => {
+    if (window.ethereum) {
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      setProvider(provider);
+      setSigner(signer);
+      setConnected(true);
+    }
+  };
+
+  const register = async () => {
+    const address = eventData.contractAddress;
+
+    const singleTicketPrice = eventData.price;
+
+    //Now we have address and ABI of contract hence we can interact with it
+    const contract = new ethers.Contract(address, events_abi, signer);
+    try {
+      console.log(`Starting to enroll to event ${address}...`);
+
+      const transactionResponse = await contract.enroll(1, {
+        value: rupeesToWei(parseInt(singleTicketPrice)),
+      });
+
+      const receipt = await transactionResponse.wait(1);
+      console.log(`The transaction is successful with ${receipt}`);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const rupeesToWei = (rupees) => {
+    const ethPerRupee = 0.0000045; // The exchange rate in number format
+    // const weiValuePerRupee = BigInt(ethPerRupee * 1e18);
+    const weiValuePerRupee = ethPerRupee * 1e18;
+    console.log(weiValuePerRupee);
+
+    const weiValue = weiValuePerRupee * rupees;
+    console.log(weiValue);
+
+    return weiValue;
+  };
+
+  // const getCurrentNoOfAttendees = async() => { //Run only once user connects
+  //     const address = eventData.contractAddress;
+  //     const contract = new ethers.Contract(address, events_abi, signer);
+  //     try{
+  //         const transactionResponse = await contract.getNoOfTicketsSold();
+  //         const receipt = await transactionResponse.wait(1);
+
+  //         console.log(transactionResponse);
+
+  //     } catch(e){
+  //         console.log(e);
+  //     }
+  // }
+
+  useEffect(() => {
+    const fetchEventData = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/event/${id}`);
+        setEventData(response.data);
+      } catch (err) {
+        setError(
+          err.response ? err.response.data.message : 'Error fetching event data'
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEventData();
+    console.log(eventData);
+  }, [id]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  return (
+    <div className="w-full h-full flex flex-col bg-[#232323] justify-center gap-5 items-center">
+      <h1 className="text-primary text-8xl font-bold">{eventData.eventName}</h1>
+      <Card className="w-3/5 p-5">
+        <strong className="text-text">Description</strong>{' '}
+        {eventData.eventDescription}
+      </Card>
+      <Card className="grid grid-cols-2 grid-rows-3 w-3/5 p-6 gap-3">
+        <p className="text-center">
+          <strong>Date:</strong>{' '}
+          {new Date(eventData.eventDate).toLocaleDateString()}
+        </p>
+        <p className="text-center">
+          <strong>Time:</strong> {eventData.eventTime}
+        </p>
+        <p className="text-center">
+          <strong>Venue:</strong> {eventData.venue}
+        </p>
+        <p className="text-center">
+          <strong>Capacity:</strong> {eventData.capacity}
+        </p>
+        <p className="col-span-2 text-center">
+          Price: ${eventData.price.toFixed(2)}
+        </p>
+      </Card>
+
+      <Button onClick={connectWallet}>
+        {' '}
+        {connected ? 'CONNECTED' : 'CONNECT WALLET'}
+      </Button>
+      {/* ULTRA PRECIOUS BUTTON */}
+      <Button
+        type="button"
+        disabled={!connected}
+        onClick={register}
+        className="bg-blue"
+        variant="ghost"
+        color="primary"
+      >
+        {' '}
+        Enter event{' '}
+      </Button>
+      {/* ULTRA PRECIOUS BUTTON */}
+      {/* <button onClick={getCurrentNoOfAttendees}>NO.OF ATTENDEES SO FAR</button> */}
+    </div>
+  );
+};
+
+export default EventDetails;
+App:
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import React from 'react';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Sidebar from './component/Sidebar';
+import Topbar from './component/Topbar';
+import Contact from './pages/Contact';
+import Landing from './pages/Landing';
+import Host from './pages/Host';
+import DataDisplay from './pages/Events';
+import EventDetails from './pages/UniEvent';
+import RedirectPage from './pages/Redirect';
+
+function AppLayout({ children }) {
+  const location = useLocation();
+
+  // Conditionally hide Sidebar and Topbar for /login and /register routes
+  const hideLayoutForRoutes = ['/login', '/register', '/', '/*'];
+  const isLoginOrRegisterPage = hideLayoutForRoutes.includes(location.pathname);
+
+  return (
+    <div className="min-h-screen flex flex-row">
+      {!isLoginOrRegisterPage && <Sidebar />}{' '}
+      <div
+        className={
+          isLoginOrRegisterPage
+            ? 'w-full flex justify-center items-center bg-concert bg-cover'
+            : 'w:fit lg:w-4/5'
+        }
+      >
+        {!isLoginOrRegisterPage && <Topbar />}{' '}
+        {/* Render Topbar unless it's /login or /register */}
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppLayout>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/hosting" element={<Host />} />
+          <Route path="/login" element={<Login />} />{' '}
+          {/* No Sidebar/Topbar here */}
+          <Route path="/register" element={<Register />} />{' '}
+          {/* No Sidebar/Topbar here */}
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/hosting" element={<Host />} />
+          <Route path="/events" element={<DataDisplay />} />
+          <Route path="/event/:id" element={<EventDetails />} />
+          <Route
+            path="*"
+            element={
+              <div className="w-full h-full bg-[#232323] text-text flex flex-col justify-center items-center">
+                <h1>
+                  Looks like you went astray,{' '}
+                  <a href="/home" className="text-accent">
+                    click here to go back.
+                  </a>
+                </h1>
+              </div>
+            }
+          />
+        </Routes>
+      </AppLayout>
+    </BrowserRouter>
+  );
+}
+
+Index:
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+Main:
+// main.tsx or main.jsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import {NextUIProvider} from '@nextui-org/react'
+import App from './App'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <NextUIProvider>
+      <main className="dark">
+      <App />
+      </main>
+    </NextUIProvider>
+  </React.StrictMode>,
+)
