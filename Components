@@ -1,0 +1,645 @@
+#Component
+
+#Checklcon.jsx
+export const CheckIcon = ({ size, height, width, ...props }) => {
+  return (
+    <svg
+      width={size || width || 24}
+      height={size || height || 24}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M12 2C6.49 2 2 6.49 2 12C2 17.51 6.49 22 12 22C17.51 22 22 17.51 22 12C22 6.49 17.51 2 12 2ZM16.78 9.7L11.11 15.37C10.97 15.51 10.78 15.59 10.58 15.59C10.38 15.59 10.19 15.51 10.05 15.37L7.22 12.54C6.93 12.25 6.93 11.77 7.22 11.48C7.51 11.19 7.99 11.19 8.28 11.48L10.58 13.78L15.72 8.64C16.01 8.35 16.49 8.35 16.78 8.64C17.07 8.93 17.07 9.4 16.78 9.7Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+};
+#Eventcard.jsx
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  Image,
+} from '@nextui-org/react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faCity,
+  faUsers,
+  faIndianRupeeSign,
+} from '@fortawesome/free-solid-svg-icons';
+import concert from '../assets/concert.jpg';
+function EventCard({ name, loc, date, maxAttendes, price, id }) {
+  return (
+    <a href={`event/${id}`}>
+      <Card className="h-[300px] hover:scale-105">
+        <CardHeader className="absolute z-10 top-1 flex-col !items-start">
+          <h1 className="text-text text-2xl font-extrabold ">{name}</h1>
+        </CardHeader>
+        <CardBody className="absolute text-secondary z-10 top-5 right-1 h-fit gap-7 flex flex-col items-center text-2xl font-bold">
+          <h2 className="text-right w-full">
+            <FontAwesomeIcon icon={faCity} /> {loc}
+          </h2>
+          <h2 className="text-right w-full">
+            <FontAwesomeIcon icon={faUsers} /> {maxAttendes}
+          </h2>
+          <h2 className="text-right w-full">
+            <FontAwesomeIcon icon={faIndianRupeeSign} /> {price}
+          </h2>
+        </CardBody>
+        <Image
+          removeWrapper
+          alt="Card background"
+          className="z-0 w-full h-full object-cover hover:scale-100 blur-sm"
+          src={concert}
+        />
+        <CardFooter className="absolute z-10 bottom-1 flex col !items-start">
+          <p className="text-md uppercase font-bold">On {date}</p>
+        </CardFooter>
+      </Card>
+    </a>
+  );
+}
+
+export default EventCard;
+
+#EventsTable.jsx
+import {  Table,  TableHeader,  TableBody,  TableColumn,  TableRow,  TableCell, getKeyValue} from "@nextui-org/table";
+
+const rows = [
+    {
+      key: "1",
+      event: "Coldplay",
+      status: "Registered",
+    },
+    {
+        key: "2",
+        event: "Ed Sheeran",
+        status: "Registered"
+      },
+      {
+        key: "3",
+        event: "Taylor Swift",
+        status: "Registered"
+      },
+      {
+        key: "4",
+        event: "The Weeknd",
+        status: "Registered"
+      },
+      {
+        key: "5",
+        event: "Billie Eilish",
+        status: "Registered"
+      },
+      {
+        key: "6",
+        event: "Adele",
+        status: "Registered"
+      }
+      
+  ];
+  
+  const columns = [
+    {
+      key: "event",
+      label: "EVENT",
+    },
+    {
+      key: "status",
+      label: "STATUS",
+    },
+  ];
+
+const EventsTable = () => {
+    return (
+        <Table topContent="Your Events" topContentPlacement="inside" isStriped aria-label="Example table with dynamic content" className="text-text">
+        <TableHeader columns={columns}>
+          {(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}
+        </TableHeader>
+        <TableBody items={rows}>
+          {(item) => (
+            <TableRow key={item.key}>
+              {(columnKey) => <TableCell>{getKeyValue(item, columnKey)}</TableCell>}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    );
+}
+
+export default Events
+#Register.jsx
+import React, { useState } from 'react';
+import axios from 'axios';
+
+const Register = () => {
+    const [name, setName] = useState('');
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [phone, setPhone] = useState('');
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (password !== confirmPassword) {
+            setError("Passwords don't match");
+            return;
+        }
+
+        try {
+            const response = await axios.post('http://localhost:5000/register', {
+                name,
+                username,
+                email,
+                password,
+                phone,
+            }, { withCredentials: true });
+
+
+            // Redirect to admin or handle success
+            if (response.status === 200) {
+                window.location.href = '/login'; // Redirect to the admin page on success
+            }
+        } catch (err) {
+            // Handle error response
+            if (err.response && err.response.status === 400) {
+                setError('User already exists');
+                console.log(err);
+            } else {
+                setError('An error occurred. Please try again later.');
+            }
+        }
+    };
+
+    return (
+        <div>
+            <h1>Register</h1>
+            <form onSubmit={handleSubmit}>
+                <div>
+                    <label htmlFor="name">Name:</label>
+                    <input
+                        type="text"
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                    />
+                </div>
+                <div>
+                    <label htmlFor="username">Username:</label>
+                    <input
+                        type="text"
+                        id="username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                    />
+                </div>
+                <div>
+                    <label htmlFor="email">Email:</label>
+                    <input
+                        type="email"
+                        id="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                </div>
+                <div>
+                    <label htmlFor="password">Password:</label>
+                    <input
+                        type="password"
+                        id="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                </div>
+                <div>
+                    <label htmlFor="confirm-password">Confirm Password:</label>
+                    <input
+                        type="password"
+                        id="confirm-password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                    />
+                </div>
+                <div>
+                    <label htmlFor="phone">Phone:</label>
+                    <input
+                        type="tel"
+                        id="phone"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        required
+                    />
+                </div>
+                <button type="submit">Register</button>
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+            </form>
+        </div>
+    );
+};
+
+export default Register;
+#Sidebar.jsx
+import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Divider, Button } from '@nextui-org/react';
+import { motion } from 'framer-motion';
+
+const Navbar = () => {
+  // State for mobile menu
+  const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Toggle sidebar for small screens
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
+
+  // Navigation functions
+  const handleDashboard = () => {
+    navigate('/home');
+  };
+
+  const handleBillingTransaction = () => {
+    navigate('*');
+  };
+
+  const handleHost = () => {
+    navigate('/hosting');
+  };
+  const handleEvents = () => {
+    navigate('/events');
+  };
+  const handleContact = () => {
+    navigate('/contact');
+  };
+
+  // Helper function to check if the current path matches the button's path
+  const isActive = (path) => {
+    console.log(path, location.pathname);
+    return location.pathname == path;
+  };
+
+  return (
+    <div className="relative block z-30 lg:w-1/5">
+      {/* Toggle button for mobile */}
+      <div className="md:hidden bg-background h-full">
+        <button
+          onClick={toggleSidebar}
+          className={`p-2 bg-primary text-white z-50 fixed top-2 transition-transform duration-300 ease-in-out transform ${
+            isOpen ? 'translate-x-[calc(75vw)]' : 'translate-x-0'
+          } md:hidden`}
+        >
+          {isOpen ? 'X' : '='}
+        </button>
+      </div>
+
+      {/* Sidebar */}
+      <div
+        className={`bg-background h-screen fixed top-0 left-0 transform  ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } transition-transform duration-300 ease-in-out w-3/4 md:w-1/5  md:translate-x-0`}
+      >
+        <div className="max-w-md p-4">
+          <div className="space-y-1 ">
+            <motion.h2
+              whileHover={{ color: 'white' }}
+              transition={{ duration: 0.5 }}
+              className="text-large font-medium text-secondary"
+            >
+              Event{' '}
+              <span className="text-text bg-secondary px-1 hover:text-secondary hover:bg-white duration-500">
+                Hub
+              </span>
+            </motion.h2>
+            <p className="text-small text-default-400">
+              Attend. Collect. Unlock.
+            </p>
+          </div>
+          <Divider className="my-4 bg-gray-500" />
+          <div className="flex flex-col align-center my-2">
+            <p className="text-xs pb-2 text-center w-full text-default-500 ">
+              Menu
+            </p>
+            {/* Navigation buttons with active state */}
+            <div className="flex flex-col gap-2">
+              <Button
+                className={`w-full  ${
+                  isActive('/home')
+                    ? 'bg-secondary text-white'
+                    : 'text-primary bg-background'
+                } hover:text-lg duration-500 hover:text-white`}
+                variant={isActive('/home') ? 'solid' : 'light'}
+                onClick={handleDashboard}
+              >
+                Dashboard
+              </Button>
+              <Button
+                className={`w-full ${
+                  isActive('/hosting')
+                    ? 'bg-secondary text-white'
+                    : 'text-primary bg-background'
+                } hover:text-lg duration-500 hover:text-white`}
+                variant={isActive('/hosting') ? 'solid' : 'light'}
+                onClick={handleHost}
+              >
+                Host
+              </Button>
+              <Button
+                className={`w-full ${
+                  isActive('/events')
+                    ? 'bg-secondary text-white'
+                    : 'text-primary bg-background'
+                } hover:text-lg duration-500 hover:text-white`}
+                variant={isActive('/events') ? 'solid' : 'light'}
+                onClick={handleEvents}
+              >
+                Events
+              </Button>
+
+              <Button
+                className={`w-full ${
+                  isActive('*')
+                    ? 'bg-secondary text-white'
+                    : 'text-primary bg-background'
+                } hover:text-lg duration-500 hover:text-white`}
+                variant={isActive('*') ? 'solid' : 'light'}
+                onClick={handleBillingTransaction}
+              >
+                Billing / Transaction
+              </Button>
+            </div>
+          </div>
+          <Divider className="my-4 bg-gray-500" />
+          {/* <p className="text-xs pb-2 text-center w-full text-default-500">Menu</p> */}
+          {/* Navigation buttons with active state */}
+          <div className="flex flex-col gap-2">
+            <Button
+              className={`w-full  ${
+                isActive('*')
+                  ? 'bg-secondary text-white'
+                  : 'text-primary bg-background'
+              } hover:text-lg duration-500 hover:text-white`}
+              variant={isActive('*') ? 'solid' : 'light'}
+              onClick={handleBillingTransaction}
+            >
+              <div>Support</div>
+            </Button>
+            <Button
+              className={`w-full ${
+                isActive('*')
+                  ? 'bg-secondary text-white'
+                  : 'text-primary bg-background'
+              } hover:text-lg duration-500 hover:text-white`}
+              variant={isActive('/contact') ? 'solid' : 'light'}
+              onClick={handleContact}
+            >
+              Contact Us
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export defa
+
+#Topbar.jsx
+import { Avatar } from '@nextui-org/react';
+import { Input } from '@nextui-org/input';
+import { motion } from 'framer-motion';
+
+function Topbar() {
+  const username = localStorage.getItem('username');
+  return (
+    <div className="bg-background w-full text-text flex flex-col lg:flex-row p-3 justify-between items-center px-6">
+      <div className="lg:w-1/2 flex flex-row gap-5">
+        <div>
+          <motion.h1
+            whileHover={{ color: 'aqua' }}
+            style={{ fontSize: '1.5rem', fontWeight: 'bold' }}
+          >
+            {username}
+          </motion.h1>
+          <motion.p
+            whileHover={{ scale: '1.05' }}
+            transition={{ duration: 1.2 }}
+          >
+            Hello, Welcome back!
+          </motion.p>
+        </div>
+      </div>
+      <div>
+        <Input
+          placeholder="Search"
+          size="lg"
+          color="secondary"
+          variant="underlined"
+        ></Input>
+      </div>
+    </div>
+  );
+}
+
+export default To
+#  Transaction table.jsx
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell,
+  getKeyValue,
+} from '@nextui-org/table';
+
+const rows = [
+  {
+    key: '1',
+    transactionId: 'TXN123456',
+    date: '2024-10-15 14:30',
+    event: 'Coldplay',
+    transactionType: 'Purchase',
+    amount: '$120',
+    status: 'Completed',
+  },
+  {
+    key: '2',
+    transactionId: 'TXN123457',
+    date: '2024-10-16 10:15',
+    event: 'Ed Sheeran',
+    transactionType: 'Purchase',
+    amount: '$95',
+    status: 'Completed',
+  },
+  {
+    key: '3',
+    transactionId: 'TXN123458',
+    date: '2024-10-17 18:45',
+    event: 'Taylor Swift',
+    transactionType: 'Purchase',
+    amount: '$150',
+    status: 'Completed',
+  },
+  {
+    key: '4',
+    transactionId: 'TXN123459',
+    date: '2024-10-18 12:00',
+    event: 'The Weeknd',
+    transactionType: 'Purchase',
+    amount: '$110',
+    status: 'Completed',
+  },
+  {
+    key: '5',
+    transactionId: 'TXN123460',
+    date: '2024-10-19 09:30',
+    event: 'Billie Eilish',
+    transactionType: 'Purchase',
+    amount: '$130',
+    status: 'Pending',
+  },
+  {
+    key: '6',
+    transactionId: 'TXN123461',
+    date: '2024-10-19 15:00',
+    event: 'Adele',
+    transactionType: 'Purchase',
+    amount: '$200',
+    status: 'Completed',
+  },
+];
+
+const columns = [
+  {
+    key: 'transactionId',
+    label: 'TRANSACTION ID',
+  },
+  {
+    key: 'date',
+    label: 'DATE & TIME',
+  },
+  {
+    key: 'event',
+    label: 'EVENT',
+  },
+  {
+    key: 'transactionType',
+    label: 'TRANSACTION TYPE',
+  },
+  {
+    key: 'amount',
+    label: 'AMOUNT',
+  },
+  {
+    key: 'status',
+    label: 'STATUS',
+  },
+];
+
+const TransactionTable = () => {
+  return (
+    <Table
+      topContent="Your Transactions"
+      topContentPlacement="inside"
+      isStriped
+      aria-label="Example table with dynamic content"
+    >
+      <TableHeader columns={columns}>
+        {(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}
+      </TableHeader>
+      <TableBody items={rows}>
+        {(item) => (
+          <TableRow key={item.key}>
+            {(columnKey) => (
+              <TableCell>{getKeyValue(item, columnKey)}</TableCell>
+            )}
+          </TableRow>
+        )}
+      </TableBody>
+    </Table>
+  );
+};
+
+export default TransactionTable;
+#WalletAmountcard.jsx
+import { Card, CardHeader, CardBody, Image, Button } from '@nextui-org/react';
+import { Chip } from '@nextui-org/react';
+import { CheckIcon } from './CheckIcon';
+import { useState } from 'react';
+import { ethers } from 'ethers';
+
+function WalletAmountCard() {
+  const [provider, setProvider] = useState(null);
+  const [signer, setSigner] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  console.log(window.ethereum);
+
+  const connectWallet = async (event) => {
+    if (window.ethereum) {
+      setIsLoading(true);
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      setProvider(provider);
+      setSigner(signer);
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Card className=" h-[340px]">
+      <CardHeader className="absolute z-10 top-2 flex-col !items-start w-full">
+        <h1 className="text-center w-full text-2xl font-bold text-text">
+          Your wallet
+        </h1>
+      </CardHeader>
+      <CardBody className="absolute z-10 top-[160px] w-full flex justify-center items-center scale-150">
+        {!provider && (
+          <Button
+            className="align-center"
+            isLoading={isLoading}
+            onClick={(e) => {
+              connectWallet(e);
+            }}
+          >
+            Connect Wallet
+          </Button>
+        )}
+        {provider && (
+          <Chip
+            className="align-center"
+            startContent={<CheckIcon size={18} />}
+            variant="faded"
+            color="success"
+          >
+            Wallet connected
+          </Chip>
+        )}
+      </CardBody>
+      <Image
+        removeWrapper
+        alt="Card background"
+        className="z-0  object-cover blur-sm"
+        src="https://nextui.org/images/card-example-4.jpeg"
+      />
+    </Card>
+  );
+}
+
+export default WalletAmountCard;
+
